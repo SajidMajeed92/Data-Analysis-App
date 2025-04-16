@@ -12,7 +12,6 @@ st.title("📊 Classic Data Visualization App")
 st.markdown("""
 Welcome to your one-stop platform for interactive data analysis.
 - Upload a CSV or Excel file
-- Filter your data
 - Explore insights through dynamic plots and summary statistics
 """)
 
@@ -22,17 +21,6 @@ uploaded_file = st.file_uploader("📂 Upload a CSV or Excel file", type=["csv",
 if uploaded_file:
     file_type = uploaded_file.name.split('.')[-1]
     df = pd.read_csv(uploaded_file) if file_type == 'csv' else pd.read_excel(uploaded_file)
-
-    st.sidebar.header("🔎 Filter Your Data")
-    for col in df.columns:
-        if df[col].dtype == 'object':
-            values = st.sidebar.multiselect(f"{col}", df[col].unique())
-            if values:
-                df = df[df[col].isin(values)]
-        elif pd.api.types.is_numeric_dtype(df[col]):
-            min_val, max_val = float(df[col].min()), float(df[col].max())
-            range_val = st.sidebar.slider(f"{col} range", min_val, max_val, (min_val, max_val))
-            df = df[df[col].between(*range_val)]
 
     st.subheader("📄 Data Preview")
     st.write(df.head())
