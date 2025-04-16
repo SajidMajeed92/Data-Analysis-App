@@ -91,7 +91,7 @@ if uploaded_file:
 
         elif chart_type == "Scatter Plot":
             if selected_x and selected_y:
-                                else:
+                fig = px.scatter(df, x=selected_x, y=selected_y)
                     fig = px.scatter(df, x=selected_x, y=selected_y)
                 st.plotly_chart(fig)
                 st.caption("This chart reveals patterns, correlations, or clusters between selected variables.")
