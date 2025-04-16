@@ -40,15 +40,24 @@ if uploaded_file:
 
         st.subheader("📌 Visualization Options")
 
+        # Bivariate column selection
+        st.markdown("**Optional: Select X and Y columns for bivariate/multivariate analysis**")
+        all_columns = df.columns.tolist()
+        selected_x = st.selectbox("X-axis Column", all_columns, index=0)
+        selected_y = st.selectbox("Y-axis Column", all_columns, index=1)
+
         
 
         columns = df.columns.tolist()
         col1 = st.selectbox("Select Column for Analysis", columns)
-        chart_type = st.selectbox("Select Chart Type", ["3D Scatter Plot", 
+        chart_type = st.selectbox("Select Chart Type", ["None", "3D Scatter Plot", 
             "Bar Chart", "Histogram", "Pie Chart", "Box Plot", "Line Chart", 
             "Scatter Plot", "Heatmap", "Violin Plot", "KDE Plot"])
 
-        if chart_type == "Bar Chart":
+        if chart_type == "None":
+            st.info("Please select a chart type to display the visualization.")
+
+        elif chart_type == "Bar Chart":
             value_counts = df[col1].value_counts()
             if not value_counts.empty:
                 st.bar_chart(value_counts)
@@ -87,8 +96,8 @@ if uploaded_file:
         elif chart_type == "3D Scatter Plot":
             numeric_cols = df.select_dtypes(include='number').columns.tolist()
             if len(numeric_cols) >= 3:
-                x_col = st.selectbox("X-axis (3D)", numeric_cols, index=0)
-                y_col = st.selectbox("Y-axis (3D)", numeric_cols, index=1)
+                x_col = selected_x
+                y_col = selected_y
                 z_col = st.selectbox("Z-axis (3D)", numeric_cols, index=2)
 
                 fig = px.scatter_3d(df, x=x_col, y=y_col, z=z_col, color=col1 if col1 in df.columns and df[col1].nunique() > 1 else None)
@@ -99,8 +108,8 @@ if uploaded_file:
         elif chart_type == "Scatter Plot":
             numeric_cols = df.select_dtypes(include='number').columns.tolist()
             if len(numeric_cols) >= 2:
-                x_col = st.selectbox("X-axis", numeric_cols, index=0)
-                y_col = st.selectbox("Y-axis", numeric_cols, index=1)
+                x_col = selected_x
+                y_col = selected_y
 
                 if col1 in df.columns and df[col1].nunique() > 1:
                     fig = px.scatter(df, x=x_col, y=y_col, color=col1)
