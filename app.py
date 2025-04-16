@@ -40,15 +40,7 @@ if uploaded_file:
 
         st.subheader("📌 Visualization Options")
 
-        # Optional filters for analysis
-        with st.expander("🔎 Add Filters (optional)"):
-            for col in df.select_dtypes(include=['object', 'category']).columns:
-                unique_vals = df[col].unique().tolist()
-                selected_vals = st.multiselect(f"Filter by {col}", options=unique_vals, default=unique_vals)
-                df = df[df[col].isin(selected_vals)]
-
-            if st.button("🔄 Reset Filters"):
-                st.experimental_rerun()
+        
 
         columns = df.columns.tolist()
         col1 = st.selectbox("Select Column for Analysis", columns)
