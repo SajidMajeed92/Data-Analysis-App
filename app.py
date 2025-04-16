@@ -50,8 +50,8 @@ if uploaded_file:
 
         if filter_summary:
             summary_str = "**Filter Summary:**
-" + '
-'.join(filter_summary)
+" + "
+".join(filter_summary)
             st.info(summary_str)
     columns = df.columns.tolist()
     col1 = st.selectbox("Select Column for Analysis", columns)
