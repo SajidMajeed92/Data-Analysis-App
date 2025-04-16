@@ -65,25 +65,34 @@ if uploaded_file:
 
     elif chart_type == "Scatter Plot":
         numeric_cols = df.select_dtypes(include='number').columns.tolist()
-        x_col = st.selectbox("X-axis", numeric_cols, index=0)
-        y_col = st.selectbox("Y-axis", numeric_cols, index=1)
-        fig = px.scatter(df, x=x_col, y=y_col, color=col1 if col1 in df.columns else None)
-        st.plotly_chart(fig)
+        if len(numeric_cols) >= 2:
+            x_col = st.selectbox("X-axis", numeric_cols, index=0)
+            y_col = st.selectbox("Y-axis", numeric_cols, index=1)
+            fig = px.scatter(df, x=x_col, y=y_col, color=col1 if col1 in df.columns else None)
+            st.plotly_chart(fig)
+        else:
+            st.warning("Need at least 2 numeric columns for scatter plot.")
 
     elif chart_type == "Heatmap":
         corr = df.select_dtypes(include='number').corr()
-        fig, ax = plt.subplots(figsize=(10, 6))
-        sns.heatmap(corr, annot=True, cmap="coolwarm", ax=ax)
-        st.pyplot(fig)
+        if corr.shape[0] >= 2:
+            fig, ax = plt.subplots(figsize=(10, 6))
+            sns.heatmap(corr, annot=True, cmap="coolwarm", ax=ax)
+            st.pyplot(fig)
+        else:
+            st.warning("Not enough numeric data for heatmap.")
 
     elif chart_type == "Violin Plot":
         num_cols = df.select_dtypes(include='number').columns
         cat_cols = df.select_dtypes(include='object').columns
-        cat_col = st.selectbox("Category Column", cat_cols)
-        num_col = st.selectbox("Numeric Column", num_cols)
-        fig, ax = plt.subplots()
-        sns.violinplot(x=cat_col, y=num_col, data=df, ax=ax)
-        st.pyplot(fig)
+        if len(cat_cols) > 0 and len(num_cols) > 0:
+            cat_col = st.selectbox("Category Column", cat_cols)
+            num_col = st.selectbox("Numeric Column", num_cols)
+            fig, ax = plt.subplots()
+            sns.violinplot(x=cat_col, y=num_col, data=df, ax=ax)
+            st.pyplot(fig)
+        else:
+            st.warning("No suitable categorical and numeric columns for violin plot.")
 
     elif chart_type == "KDE Plot":
         if pd.api.types.is_numeric_dtype(df[col1]):
