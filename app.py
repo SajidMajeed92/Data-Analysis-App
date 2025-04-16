@@ -9,6 +9,22 @@ import plotly.io as pio
 
 st.set_page_config(page_title="Sleek Data Viz App", layout="wide")
 
+# Theme toggle
+mode = st.sidebar.radio("🌗 Select Theme Mode", ("Light", "Dark"))
+if mode == "Dark":
+    st.markdown("""
+        <style>
+            body {
+                background-color: #1e1e1e;
+                color: #f0f0f0;
+            }
+            .stApp {
+                background-color: #1e1e1e;
+                color: #f0f0f0;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
 st.title("📊 Sleek Data Visualization App")
 st.markdown("""
 Upload your dataset and explore it through powerful, interactive visualizations.
@@ -66,7 +82,7 @@ if uploaded_file:
                 with st.expander("💾 Save Plot"):
                     buf = BytesIO()
                     fig.savefig(buf, format='png')
-                    st.download_button("Download as PNG", data=buf.getvalue(), file_name="histogram.png", mime="image/png")
+                    st.download_button("Download as PNG", data=buf.getvalue(), file_name=f"histogram_{selected_x}.png", mime="image/png")
 
         elif chart_type == "Pie Chart":
             if selected_x and df[selected_x].nunique() <= 10:
@@ -74,16 +90,31 @@ if uploaded_file:
                 df[selected_x].value_counts().plot.pie(autopct='%1.1f%%', ax=ax)
                 ax.set_ylabel('')
                 st.pyplot(fig)
+                with st.expander("💾 Save Plot"):
+                    buf = BytesIO()
+                    fig.savefig(buf, format='png')
+                    st.download_button("Download as PNG", data=buf.getvalue(), file_name=f"pie_chart_{selected_x}.png", mime="image/png")
 
         elif chart_type == "Box Plot":
             if selected_x and pd.api.types.is_numeric_dtype(df[selected_x]):
                 fig, ax = plt.subplots()
                 sns.boxplot(y=df[selected_x], ax=ax)
                 st.pyplot(fig)
+                with st.expander("💾 Save Plot"):
+                    buf = BytesIO()
+                    fig.savefig(buf, format='png')
+                    st.download_button("Download as PNG", data=buf.getvalue(), file_name=f"box_plot_{selected_x}.png", mime="image/png")
 
         elif chart_type == "Line Chart":
             if selected_x and pd.api.types.is_numeric_dtype(df[selected_x]):
-                st.line_chart(df[selected_x])
+                fig, ax = plt.subplots()
+                df[selected_x].plot(ax=ax)
+                st.pyplot(fig)
+                st.caption("Line charts help you understand time-series trends, such as seasonality or consistent growth/decline.")
+                with st.expander("💾 Save Plot"):
+                    buf = BytesIO()
+                    fig.savefig(buf, format='png')
+                    st.download_button("Download as PNG", data=buf.getvalue(), file_name=f"line_chart_{selected_x}.png", mime="image/png")
                 st.caption("Line charts help you understand time-series trends, such as seasonality or consistent growth/decline.")
 
         elif chart_type == "Scatter Plot":
@@ -94,7 +125,7 @@ if uploaded_file:
                 with st.expander("💾 Save Plot"):
                     buf = BytesIO()
                     fig.write_image(buf, format='png')
-                    st.download_button("Download as PNG", data=buf.getvalue(), file_name="scatter.png", mime="image/png")
+                    st.download_button("Download as PNG", data=buf.getvalue(), file_name=f"scatter_{selected_x}_vs_{selected_y}.png", mime="image/png")
 
         elif chart_type == "3D Scatter Plot":
             numeric_cols = df.select_dtypes(include='number').columns.tolist()
@@ -106,16 +137,19 @@ if uploaded_file:
                     with st.expander("💾 Save Plot"):
                         buf = BytesIO()
                         fig.write_image(buf, format='png')
-                        st.download_button("Download as PNG", data=buf.getvalue(), file_name="3d_scatter.png", mime="image/png")
+                        st.download_button("Download as PNG", data=buf.getvalue(), file_name=f"3dscatter_{selected_x}_{selected_y}_{z_col}.png", mime="image/png")
 
         elif chart_type == "KDE Plot":
             if selected_x and pd.api.types.is_numeric_dtype(df[selected_x]):
                 fig, ax = plt.subplots()
                 sns.kdeplot(df[selected_x], ax=ax, shade=True)
                 st.pyplot(fig)
+                with st.expander("💾 Save Plot"):
+                    buf = BytesIO()
+                    fig.savefig(buf, format='png')
+                    st.download_button("Download as PNG", data=buf.getvalue(), file_name=f"kde_{selected_x}.png", mime="image/png")
 
         elif chart_type == "Violin Plot":
-            # Reused categorical_cols and numeric_cols
             cat_cols = categorical_cols
             num_cols = numeric_cols
             if cat_cols and num_cols:
@@ -124,6 +158,10 @@ if uploaded_file:
                 fig, ax = plt.subplots()
                 sns.violinplot(x=cat_col, y=num_col, data=df, ax=ax)
                 st.pyplot(fig)
+                with st.expander("💾 Save Plot"):
+                    buf = BytesIO()
+                    fig.savefig(buf, format='png')
+                    st.download_button("Download as PNG", data=buf.getvalue(), file_name=f"violin_{cat_col}_vs_{num_col}.png", mime="image/png")
 
         elif chart_type == "Heatmap":
             corr = df.select_dtypes(include='number').corr()
@@ -132,6 +170,10 @@ if uploaded_file:
                 sns.heatmap(corr, annot=True, cmap="coolwarm", ax=ax)
                 st.caption("A heatmap shows pairwise correlation between numeric variables, helping identify strong or weak relationships.")
                 st.pyplot(fig)
+                with st.expander("💾 Save Plot"):
+                    buf = BytesIO()
+                    fig.savefig(buf, format='png')
+                    st.download_button("Download as PNG", data=buf.getvalue(), file_name="heatmap.png", mime="image/png")
 
 else:
     with col_right:
