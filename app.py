@@ -22,11 +22,14 @@ if uploaded_file:
     file_type = uploaded_file.name.split('.')[-1]
     df = pd.read_csv(uploaded_file) if file_type == 'csv' else pd.read_excel(uploaded_file)
 
+    # Remove unnamed index-like columns
+    df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+
     st.subheader("📄 Data Preview")
     st.write(df.head())
 
     st.subheader("📊 Summary Statistics")
-    st.dataframe(df.describe(include='all').transpose())
+    st.dataframe(df.select_dtypes(include='number').describe().transpose())
 
     st.subheader("📌 Visualization Options")
     columns = df.columns.tolist()
@@ -36,7 +39,11 @@ if uploaded_file:
         "Scatter Plot", "Heatmap", "Violin Plot", "KDE Plot"])
 
     if chart_type == "Bar Chart":
-        st.bar_chart(df[col1].value_counts())
+        value_counts = df[col1].value_counts()
+        if not value_counts.empty:
+            st.bar_chart(value_counts)
+        else:
+            st.warning("Selected column does not contain valid data for a bar chart.")
 
     elif chart_type == "Histogram":
         if pd.api.types.is_numeric_dtype(df[col1]):
