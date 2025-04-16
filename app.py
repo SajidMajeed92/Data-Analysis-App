@@ -54,10 +54,11 @@ if uploaded_file:
             st.info("Please select a chart type to begin visualization.")
 
         elif chart_type == "Bar Chart":
-            value_counts = df[selected_x].value_counts()
+            if selected_x:
+                value_counts = df[selected_x].value_counts()
                 st.bar_chart(value_counts)
                 with st.expander("ℹ️ About this chart"):
-    st.markdown("Bar charts help visualize the frequency of different categories to spot the most or least common groups.")
+                    st.markdown("Bar charts help visualize the frequency of different categories to spot the most or least common groups.")
 
         elif chart_type == "Histogram":
             if selected_x and pd.api.types.is_numeric_dtype(df[selected_x]):
