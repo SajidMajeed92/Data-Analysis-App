@@ -4,4 +4,4 @@ matplotlib
 seaborn
 plotly
 openpyxl
-
+kaleido
