@@ -77,8 +77,6 @@ if uploaded_file:
             st.plotly_chart(fig)
         else:
             st.warning("Need at least 2 numeric columns for scatter plot.")
-        else:
-            st.warning("Need at least 2 numeric columns for scatter plot.")
 
     elif chart_type == "Heatmap":
         corr = df.select_dtypes(include='number').corr()
