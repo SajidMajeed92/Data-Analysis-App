@@ -68,8 +68,15 @@ if uploaded_file:
         if len(numeric_cols) >= 2:
             x_col = st.selectbox("X-axis", numeric_cols, index=0)
             y_col = st.selectbox("Y-axis", numeric_cols, index=1)
-            fig = px.scatter(df, x=x_col, y=y_col, color=col1 if col1 in df.columns else None)
+
+            if col1 in df.columns and df[col1].nunique() > 1:
+                fig = px.scatter(df, x=x_col, y=y_col, color=col1)
+            else:
+                fig = px.scatter(df, x=x_col, y=y_col)
+
             st.plotly_chart(fig)
+        else:
+            st.warning("Need at least 2 numeric columns for scatter plot.")
         else:
             st.warning("Need at least 2 numeric columns for scatter plot.")
 
