@@ -100,10 +100,7 @@ if uploaded_file:
 
             fig = px.scatter_3d(df, x=x_col, y=y_col, z=z_col, color=col1 if col1 in df.columns and df[col1].nunique() > 1 else None)
             st.plotly_chart(fig)
-            with st.expander("💾 Save Plot"):
-                fig.write_image("3d_plotly_fig.png")
-                with open("3d_plotly_fig.png", "rb") as f:
-                    st.download_button("Download as PNG", data=f, file_name="3d_plot.png", mime="image/png")
+            "Download as PNG", data=f, file_name="3d_plot.png", mime="image/png")
         else:
             st.warning("Need at least 3 numeric columns for 3D scatter plot.")
 
@@ -119,10 +116,7 @@ if uploaded_file:
                 fig = px.scatter(df, x=x_col, y=y_col)
 
             st.plotly_chart(fig)
-            with st.expander("💾 Save Plot"):
-                fig.write_image("plotly_fig.png")
-                with open("plotly_fig.png", "rb") as f:
-                    st.download_button("Download as PNG", data=f, file_name="plot.png", mime="image/png")
+            "Download as PNG", data=f, file_name="plot.png", mime="image/png")
         else:
             st.warning("Need at least 2 numeric columns for scatter plot.")
 
