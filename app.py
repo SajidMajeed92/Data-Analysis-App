@@ -34,21 +34,16 @@ if uploaded_file:
         st.subheader("📌 Visualization Options")
 
         all_columns = df.columns.tolist()
-        numeric_cols = df.select_dtypes(include='number').columns.tolist()
-        categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
+        # numeric and categorical columns filtered once for reuse
+        # already defined earlier, no need to repeat
+            # numeric_cols = df.select_dtypes(include='number').columns.tolist()
+                categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
 
-        if chart_type in ["Histogram", "Box Plot", "Line Chart", "KDE Plot"]:
-            selected_x = st.selectbox("X-axis Column", numeric_cols, index=None, help="Select a numeric column for this chart type.")
-        elif chart_type == "Pie Chart":
-            selected_x = st.selectbox("X-axis Column", categorical_cols, index=None, help="Select a categorical column with few unique values.")
-        else:
-            selected_x = st.selectbox("X-axis Column", all_columns, index=None, help="Choose any column — numeric preferred for most charts.")
-        if chart_type in ["Scatter Plot", "3D Scatter Plot"]:
-            selected_y = st.selectbox("Y-axis Column", numeric_cols, index=None, help="Select a numeric column for Y-axis.")
-        else:
-            selected_y = st.selectbox("Y-axis Column", all_columns, index=None, help="Optional: Used in bivariate or 3D plots.")
-        
+                                                
         chart_type = st.selectbox("Select Chart Type", ["None", "Bar Chart", "Histogram", "Pie Chart", "Box Plot", "Line Chart", "Scatter Plot", "3D Scatter Plot", "KDE Plot", "Violin Plot", "Heatmap"])
+
+        selected_x = st.selectbox("X-axis Column", all_columns, index=None, help="Choose a column for X-axis")
+        selected_y = st.selectbox("Y-axis Column", all_columns, index=None, help="Choose a column for Y-axis")
 
         if chart_type == "None":
             st.info("Please select a chart type to begin visualization.")
@@ -118,8 +113,9 @@ if uploaded_file:
                 st.pyplot(fig)
 
         elif chart_type == "Violin Plot":
-            cat_cols = df.select_dtypes(include='object').columns.tolist()
-            num_cols = df.select_dtypes(include='number').columns.tolist()
+            # reused categorical_cols instead of redefining
+            cat_cols = categorical_cols
+                        num_cols = numeric_cols
             if cat_cols and num_cols:
                 cat_col = st.selectbox("Category Column", cat_cols)
                 num_col = st.selectbox("Numeric Column", num_cols)
