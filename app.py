@@ -34,10 +34,9 @@ if uploaded_file:
         st.subheader("📌 Visualization Options")
 
         all_columns = df.columns.tolist()
-        # numeric and categorical columns filtered once for reuse
-        # already defined earlier, no need to repeat
-            # numeric_cols = df.select_dtypes(include='number').columns.tolist()
-                categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
+        # Numeric and categorical columns filtered once for reuse
+        numeric_cols = df.select_dtypes(include='number').columns.tolist()
+        categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
 
                                                 
         chart_type = st.selectbox("Select Chart Type", ["None", "Bar Chart", "Histogram", "Pie Chart", "Box Plot", "Line Chart", "Scatter Plot", "3D Scatter Plot", "KDE Plot", "Violin Plot", "Heatmap"])
@@ -113,9 +112,9 @@ if uploaded_file:
                 st.pyplot(fig)
 
         elif chart_type == "Violin Plot":
-            # reused categorical_cols instead of redefining
-            cat_cols = categorical_cols
-                        num_cols = numeric_cols
+            # Reused categorical_cols and numeric_cols
+                cat_cols = categorical_cols
+                num_cols = numeric_cols
             if cat_cols and num_cols:
                 cat_col = st.selectbox("Category Column", cat_cols)
                 num_col = st.selectbox("Numeric Column", num_cols)
