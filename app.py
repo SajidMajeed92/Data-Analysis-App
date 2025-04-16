@@ -46,8 +46,7 @@ if uploaded_file:
         st.subheader("🔍 Initial Data Preview")
         st.write(df.head())
 
-
-
+        
         # Step 4: Column selection dropdown
         st.subheader("📌 Select Column for Visualization")
         selected_col = st.selectbox("Choose a column", df.columns)
@@ -68,34 +67,64 @@ if uploaded_file:
             for f in applied_filters:
                 st.markdown(f"- {f}")
 
-        fig, ax = plt.subplots()
         try:
             if chart_type == "Time Series Line Plot":
                 time_cols = df.select_dtypes(include=['datetime64', 'object']).columns.tolist()
                 num_cols = df.select_dtypes(include='number').columns.tolist()
                 time_col = st.selectbox("Select time/date column", time_cols)
                 y_col = st.selectbox("Select value column for Y-axis", num_cols)
-                try:
-                    df[time_col] = pd.to_datetime(df[time_col])
-                    fig_ts, ax_ts = plt.subplots()
-                    df.sort_values(by=time_col).plot(x=time_col, y=y_col, ax=ax_ts)
-                    ax_ts.set_title(f"Time Series Plot: {y_col} over {time_col}")
-                    st.pyplot(fig_ts)
-                    img_buffer = BytesIO()
-                    fig_ts.savefig(img_buffer, format='png')
-                    st.download_button("📸 Download Chart as PNG", data=img_buffer.getvalue(), file_name="time_series_plot.png", mime="image/png")
-                except Exception as e:
-                    st.error(f"Error parsing time column: {str(e)}")
-
-            # Add chart export functionality placeholder
-            elif chart_type != "3D Scatter Plot":
-                # Plot example chart (replace this with actual plot logic as needed)
-                st.write(f"Selected chart: {chart_type}")
-                ax.plot([1, 2, 3], [4, 5, 6])
-                st.pyplot(fig)
+                df[time_col] = pd.to_datetime(df[time_col], errors='coerce')
+                df = df.dropna(subset=[time_col, y_col])
+                fig_ts, ax_ts = plt.subplots()
+                df.sort_values(by=time_col).plot(x=time_col, y=y_col, ax=ax_ts)
+                ax_ts.set_title(f"Time Series Plot: {y_col} over {time_col}")
+                st.pyplot(fig_ts)
                 img_buffer = BytesIO()
-                fig.savefig(img_buffer, format='png')
-                st.download_button("📸 Download Chart as PNG", data=img_buffer.getvalue(), file_name="chart.png", mime="image/png")
+                fig_ts.savefig(img_buffer, format='png')
+                st.download_button("📸 Download Chart as PNG", data=img_buffer.getvalue(), file_name="time_series_plot.png", mime="image/png")
+
+            elif chart_type == "Bar Chart":
+                fig, ax = plt.subplots()
+                df[selected_col].value_counts().plot(kind='bar', ax=ax)
+                st.pyplot(fig)
+
+            elif chart_type == "Pie Chart":
+                if df[selected_col].nunique() > 10:
+                    st.warning("Too many unique categories for a pie chart. Try selecting a categorical column with fewer categories.")
+                else:
+                    fig, ax = plt.subplots()
+                    df[selected_col].value_counts().plot(kind='pie', autopct='%1.1f%%', ax=ax)
+                    ax.set_ylabel('')
+                    st.pyplot(fig)
+
+            elif chart_type == "Scatter Plot":
+                numeric_cols = df.select_dtypes(include='number').columns.tolist()
+                if selected_col not in numeric_cols:
+                    st.error("Scatter plot requires a numeric column. Please select a numeric column.")
+                else:
+                    y_col = st.selectbox("Select Y-axis column", [col for col in numeric_cols if col != selected_col])
+                    fig, ax = plt.subplots()
+                    ax.scatter(df[selected_col], df[y_col])
+                    ax.set_xlabel(selected_col)
+                    ax.set_ylabel(y_col)
+                    st.pyplot(fig)
+
+            elif chart_type == "Box Plot":
+                if df[selected_col].dtype not in ['int64', 'float64']:
+                    st.error("Box plot requires a numeric column. Please select a numeric column.")
+                else:
+                    fig, ax = plt.subplots()
+                    df.boxplot(column=selected_col, ax=ax)
+                    st.pyplot(fig)
+
+            elif chart_type == "Histogram":
+                if df[selected_col].dtype not in ['int64', 'float64']:
+                    st.error("Histogram requires a numeric column. Please select a numeric column.")
+                else:
+                    fig, ax = plt.subplots()
+                    df[selected_col].plot(kind='hist', bins=20, ax=ax)
+                    ax.set_title(f"Histogram of {selected_col}")
+                    st.pyplot(fig)
 
         except Exception as e:
             st.error(f"An error occurred during plotting: {str(e)}")
