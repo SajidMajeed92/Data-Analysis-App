@@ -1,135 +1,109 @@
-# streamlit_app.py
+# app.py
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
-from io import BytesIO
 
-# Step 1: Upload the File
-st.title("📊 Data Visualization App")
-st.write("Upload a CSV or Excel file to begin analysis")
+st.set_page_config(page_title="Classic Data Viz App", layout="wide")
 
-# Sidebar filter and interaction options
-st.sidebar.header("🔧 Filter Options")
-filter_col = st.sidebar.multiselect("Select column(s) to filter:", [])
+# Title and intro
+st.title("📊 Classic Data Visualization App")
+st.markdown("""
+Welcome to your one-stop platform for interactive data analysis.
+- Upload a CSV or Excel file
+- Filter your data
+- Explore insights through dynamic plots and summary statistics
+""")
 
-uploaded_file = st.file_uploader("Upload your file", type=["csv", "xls", "xlsx"])
+# File uploader
+uploaded_file = st.file_uploader("📂 Upload a CSV or Excel file", type=["csv", "xls", "xlsx"])
 
 if uploaded_file:
-    try:
-        if uploaded_file.name.endswith('.csv'):
-            df = pd.read_csv(uploaded_file)
+    file_type = uploaded_file.name.split('.')[-1]
+    df = pd.read_csv(uploaded_file) if file_type == 'csv' else pd.read_excel(uploaded_file)
+
+    st.sidebar.header("🔎 Filter Your Data")
+    for col in df.columns:
+        if df[col].dtype == 'object':
+            values = st.sidebar.multiselect(f"{col}", df[col].unique())
+            if values:
+                df = df[df[col].isin(values)]
+        elif pd.api.types.is_numeric_dtype(df[col]):
+            min_val, max_val = float(df[col].min()), float(df[col].max())
+            range_val = st.sidebar.slider(f"{col} range", min_val, max_val, (min_val, max_val))
+            df = df[df[col].between(*range_val)]
+
+    st.subheader("📄 Data Preview")
+    st.write(df.head())
+
+    st.subheader("📊 Summary Statistics")
+    st.dataframe(df.describe(include='all').transpose())
+
+    st.subheader("📌 Visualization Options")
+    columns = df.columns.tolist()
+    col1 = st.selectbox("Select Column for Analysis", columns)
+    chart_type = st.selectbox("Select Chart Type", [
+        "Bar Chart", "Histogram", "Pie Chart", "Box Plot", "Line Chart", 
+        "Scatter Plot", "Heatmap", "Violin Plot", "KDE Plot"])
+
+    if chart_type == "Bar Chart":
+        st.bar_chart(df[col1].value_counts())
+
+    elif chart_type == "Histogram":
+        if pd.api.types.is_numeric_dtype(df[col1]):
+            fig, ax = plt.subplots()
+            sns.histplot(df[col1], kde=False, ax=ax)
+            st.pyplot(fig)
+
+    elif chart_type == "Pie Chart":
+        if df[col1].nunique() <= 10:
+            fig, ax = plt.subplots()
+            df[col1].value_counts().plot.pie(autopct='%1.1f%%', ax=ax)
+            ax.set_ylabel('')
+            st.pyplot(fig)
         else:
-            df = pd.read_excel(uploaded_file)
+            st.warning("Too many unique values for pie chart.")
 
-        applied_filters = []  # Track applied filters for summary
+    elif chart_type == "Box Plot":
+        if pd.api.types.is_numeric_dtype(df[col1]):
+            fig, ax = plt.subplots()
+            sns.boxplot(y=df[col1], ax=ax)
+            st.pyplot(fig)
 
-        # Refresh sidebar filters
-        st.sidebar.subheader("Apply Filters")
-        filter_col = st.sidebar.multiselect("Select column(s) to filter:", df.columns.tolist())
-        if filter_col:
-            for col in filter_col:
-                if df[col].dtype == 'object':
-                    selected_values = st.sidebar.multiselect(f"Filter {col} by:", df[col].unique().tolist())
-                    if selected_values:
-                        df = df[df[col].isin(selected_values)]
-                        applied_filters.append(f"{col} in {selected_values}")
-                else:
-                    min_val = float(df[col].min())
-                    max_val = float(df[col].max())
-                    range_val = st.sidebar.slider(f"Filter {col} range:", min_val, max_val, (min_val, max_val))
-                    df = df[df[col].between(*range_val)]
-                    applied_filters.append(f"{col} between {range_val[0]} and {range_val[1]}")
+    elif chart_type == "Line Chart":
+        if pd.api.types.is_numeric_dtype(df[col1]):
+            st.line_chart(df[col1])
 
-        # Step 2: Show first 5 records
-        st.subheader("🔍 Initial Data Preview")
-        st.write(df.head())
+    elif chart_type == "Scatter Plot":
+        numeric_cols = df.select_dtypes(include='number').columns.tolist()
+        x_col = st.selectbox("X-axis", numeric_cols, index=0)
+        y_col = st.selectbox("Y-axis", numeric_cols, index=1)
+        fig = px.scatter(df, x=x_col, y=y_col, color=col1 if col1 in df.columns else None)
+        st.plotly_chart(fig)
 
-        
-        # Step 4: Column selection dropdown
-        st.subheader("📌 Select Column for Visualization")
-        selected_col = st.selectbox("Choose a column", df.columns)
+    elif chart_type == "Heatmap":
+        corr = df.select_dtypes(include='number').corr()
+        fig, ax = plt.subplots(figsize=(10, 6))
+        sns.heatmap(corr, annot=True, cmap="coolwarm", ax=ax)
+        st.pyplot(fig)
 
-        # Step 5: Chart selection
-        st.subheader("📊 Choose Visualization Type")
-        chart_type = st.selectbox("Select chart type", [
-            "Bar Chart", "Pie Chart", "Scatter Plot", "Box Plot", "Histogram",
-            "KDE with Bar Plot", "Correlation Matrix", "Bivariate Analysis", "Multivariate Analysis",
-            "Violin Plot", "Categorical Heatmap", "3D Scatter Plot", "Time Series Line Plot"])
+    elif chart_type == "Violin Plot":
+        num_cols = df.select_dtypes(include='number').columns
+        cat_cols = df.select_dtypes(include='object').columns
+        cat_col = st.selectbox("Category Column", cat_cols)
+        num_col = st.selectbox("Numeric Column", num_cols)
+        fig, ax = plt.subplots()
+        sns.violinplot(x=cat_col, y=num_col, data=df, ax=ax)
+        st.pyplot(fig)
 
-        # Step 6: Generate plots with validation
-        st.subheader("📈 Visualization Output")
+    elif chart_type == "KDE Plot":
+        if pd.api.types.is_numeric_dtype(df[col1]):
+            fig, ax = plt.subplots()
+            sns.kdeplot(df[col1], ax=ax, shade=True)
+            st.pyplot(fig)
 
-        # Display applied filters
-        if applied_filters:
-            st.markdown("### 🧾 Applied Filters")
-            for f in applied_filters:
-                st.markdown(f"- {f}")
+    st.success("✅ Visualization generated successfully!")
 
-        try:
-            if chart_type == "Time Series Line Plot":
-                time_cols = df.select_dtypes(include=['datetime64', 'object']).columns.tolist()
-                num_cols = df.select_dtypes(include='number').columns.tolist()
-                time_col = st.selectbox("Select time/date column", time_cols)
-                y_col = st.selectbox("Select value column for Y-axis", num_cols)
-                df[time_col] = pd.to_datetime(df[time_col], errors='coerce')
-                df = df.dropna(subset=[time_col, y_col])
-                fig_ts, ax_ts = plt.subplots()
-                df.sort_values(by=time_col).plot(x=time_col, y=y_col, ax=ax_ts)
-                ax_ts.set_title(f"Time Series Plot: {y_col} over {time_col}")
-                st.pyplot(fig_ts)
-                img_buffer = BytesIO()
-                fig_ts.savefig(img_buffer, format='png')
-                st.download_button("📸 Download Chart as PNG", data=img_buffer.getvalue(), file_name="time_series_plot.png", mime="image/png")
-
-            elif chart_type == "Bar Chart":
-                fig, ax = plt.subplots()
-                df[selected_col].value_counts().plot(kind='bar', ax=ax)
-                st.pyplot(fig)
-
-            elif chart_type == "Pie Chart":
-                if df[selected_col].nunique() > 10:
-                    st.warning("Too many unique categories for a pie chart. Try selecting a categorical column with fewer categories.")
-                else:
-                    fig, ax = plt.subplots()
-                    df[selected_col].value_counts().plot(kind='pie', autopct='%1.1f%%', ax=ax)
-                    ax.set_ylabel('')
-                    st.pyplot(fig)
-
-            elif chart_type == "Scatter Plot":
-                numeric_cols = df.select_dtypes(include='number').columns.tolist()
-                if selected_col not in numeric_cols:
-                    st.error("Scatter plot requires a numeric column. Please select a numeric column.")
-                else:
-                    y_col = st.selectbox("Select Y-axis column", [col for col in numeric_cols if col != selected_col])
-                    fig, ax = plt.subplots()
-                    ax.scatter(df[selected_col], df[y_col])
-                    ax.set_xlabel(selected_col)
-                    ax.set_ylabel(y_col)
-                    st.pyplot(fig)
-
-            elif chart_type == "Box Plot":
-                if df[selected_col].dtype not in ['int64', 'float64']:
-                    st.error("Box plot requires a numeric column. Please select a numeric column.")
-                else:
-                    fig, ax = plt.subplots()
-                    df.boxplot(column=selected_col, ax=ax)
-                    st.pyplot(fig)
-
-            elif chart_type == "Histogram":
-                if df[selected_col].dtype not in ['int64', 'float64']:
-                    st.error("Histogram requires a numeric column. Please select a numeric column.")
-                else:
-                    fig, ax = plt.subplots()
-                    df[selected_col].plot(kind='hist', bins=20, ax=ax)
-                    ax.set_title(f"Histogram of {selected_col}")
-                    st.pyplot(fig)
-
-        except Exception as e:
-            st.error(f"An error occurred during plotting: {str(e)}")
-
-    except Exception as e:
-        st.error(f"Failed to read the file. Error: {str(e)}")
 else:
-    st.info("Please upload a file to proceed.")
+    st.info("📁 Please upload a file to get started.")
