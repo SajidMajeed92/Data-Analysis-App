@@ -113,8 +113,8 @@ if uploaded_file:
 
         elif chart_type == "Violin Plot":
             # Reused categorical_cols and numeric_cols
-                cat_cols = categorical_cols
-                num_cols = numeric_cols
+            cat_cols = categorical_cols
+            num_cols = numeric_cols
             if cat_cols and num_cols:
                 cat_col = st.selectbox("Category Column", cat_cols)
                 num_col = st.selectbox("Numeric Column", num_cols)
