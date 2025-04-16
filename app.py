@@ -37,8 +37,16 @@ if uploaded_file:
         numeric_cols = df.select_dtypes(include='number').columns.tolist()
         categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
 
-        selected_x = st.selectbox("X-axis Column", all_columns, index=None, help="Choose any column — numeric preferred for most charts")
-        selected_y = st.selectbox("Y-axis Column", all_columns, index=None, help="Used in bivariate or 3D plots")
+        if chart_type in ["Histogram", "Box Plot", "Line Chart", "KDE Plot"]:
+            selected_x = st.selectbox("X-axis Column", numeric_cols, index=None, help="Select a numeric column for this chart type.")
+        elif chart_type == "Pie Chart":
+            selected_x = st.selectbox("X-axis Column", categorical_cols, index=None, help="Select a categorical column with few unique values.")
+        else:
+            selected_x = st.selectbox("X-axis Column", all_columns, index=None, help="Choose any column — numeric preferred for most charts.")
+        if chart_type in ["Scatter Plot", "3D Scatter Plot"]:
+            selected_y = st.selectbox("Y-axis Column", numeric_cols, index=None, help="Select a numeric column for Y-axis.")
+        else:
+            selected_y = st.selectbox("Y-axis Column", all_columns, index=None, help="Optional: Used in bivariate or 3D plots.")
         
         chart_type = st.selectbox("Select Chart Type", ["None", "Bar Chart", "Histogram", "Pie Chart", "Box Plot", "Line Chart", "Scatter Plot", "3D Scatter Plot", "KDE Plot", "Violin Plot", "Heatmap"])
 
