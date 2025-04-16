@@ -42,7 +42,10 @@ if uploaded_file:
         chart_type = st.selectbox("Select Chart Type", ["None", "Bar Chart", "Histogram", "Pie Chart", "Box Plot", "Line Chart", "Scatter Plot", "3D Scatter Plot", "KDE Plot", "Violin Plot", "Heatmap"])
 
         selected_x = st.selectbox("X-axis Column", all_columns, index=None, help="Choose a column for X-axis")
-        selected_y = st.selectbox("Y-axis Column", all_columns, index=None, help="Choose a column for Y-axis")
+        if chart_type in ["Scatter Plot", "3D Scatter Plot"]:
+            selected_y = st.selectbox("Y-axis Column", all_columns, index=None, help="Choose a column for Y-axis")
+        else:
+            selected_y = None
 
         if chart_type == "None":
             st.info("Please select a chart type to begin visualization.")
