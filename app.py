@@ -34,20 +34,22 @@ if uploaded_file:
         st.subheader("📌 Visualization Options")
 
         all_columns = df.columns.tolist()
-        selected_x = st.selectbox("X-axis Column", all_columns, index=None)
-        selected_y = st.selectbox("Y-axis Column", all_columns, index=None)
-        col1 = st.selectbox("Select Column for Grouping (optional)", ["None"] + all_columns)
+        numeric_cols = df.select_dtypes(include='number').columns.tolist()
+        categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
 
+        selected_x = st.selectbox("X-axis Column", all_columns, index=None, help="Choose any column — numeric preferred for most charts")
+        selected_y = st.selectbox("Y-axis Column", all_columns, index=None, help="Used in bivariate or 3D plots")
+        
         chart_type = st.selectbox("Select Chart Type", ["None", "Bar Chart", "Histogram", "Pie Chart", "Box Plot", "Line Chart", "Scatter Plot", "3D Scatter Plot", "KDE Plot", "Violin Plot", "Heatmap"])
 
         if chart_type == "None":
             st.info("Please select a chart type to begin visualization.")
 
         elif chart_type == "Bar Chart":
-            if col1 != "None":
-                value_counts = df[col1].value_counts()
+            value_counts = df[selected_x].value_counts()
                 st.bar_chart(value_counts)
-                st.caption("Bar charts help visualize the frequency of different categories to spot the most or least common groups.")
+                with st.expander("ℹ️ About this chart"):
+    st.markdown("Bar charts help visualize the frequency of different categories to spot the most or least common groups.")
 
         elif chart_type == "Histogram":
             if selected_x and pd.api.types.is_numeric_dtype(df[selected_x]):
@@ -61,9 +63,9 @@ if uploaded_file:
                     st.download_button("Download as PNG", data=buf.getvalue(), file_name="histogram.png", mime="image/png")
 
         elif chart_type == "Pie Chart":
-            if col1 != "None" and df[col1].nunique() <= 10:
+            if selected_x and df[selected_x].nunique() <= 10:
                 fig, ax = plt.subplots()
-                df[col1].value_counts().plot.pie(autopct='%1.1f%%', ax=ax)
+                df[selected_x].value_counts().plot.pie(autopct='%1.1f%%', ax=ax)
                 ax.set_ylabel('')
                 st.pyplot(fig)
 
@@ -80,9 +82,7 @@ if uploaded_file:
 
         elif chart_type == "Scatter Plot":
             if selected_x and selected_y:
-                if col1 != "None":
-                    fig = px.scatter(df, x=selected_x, y=selected_y, color=col1)
-                else:
+                                else:
                     fig = px.scatter(df, x=selected_x, y=selected_y)
                 st.plotly_chart(fig)
                 st.caption("This chart reveals patterns, correlations, or clusters between selected variables.")
@@ -94,9 +94,9 @@ if uploaded_file:
         elif chart_type == "3D Scatter Plot":
             numeric_cols = df.select_dtypes(include='number').columns.tolist()
             if len(numeric_cols) >= 3:
-                z_col = st.selectbox("Z-axis (3D)", numeric_cols, index=2)
+                z_col = st.selectbox("Z-axis (3D)", numeric_cols, index=None, help="Must be a numeric column")
                 if selected_x and selected_y:
-                    fig = px.scatter_3d(df, x=selected_x, y=selected_y, z=z_col, color=col1 if col1 != "None" else None)
+                    fig = px.scatter_3d(df, x=selected_x, y=selected_y, z=z_col, color=None)
                     st.plotly_chart(fig)
                     with st.expander("💾 Save Plot"):
                         buf = BytesIO()
