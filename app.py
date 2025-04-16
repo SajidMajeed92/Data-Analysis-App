@@ -50,8 +50,8 @@ if uploaded_file:
 
         if filter_summary:
             st.info("**Filter Summary:**
-" + "
-".join(filter_summary))
+" + '
+'.join(filter_summary)))
     columns = df.columns.tolist()
     col1 = st.selectbox("Select Column for Analysis", columns)
     chart_type = st.selectbox("Select Chart Type", ["3D Scatter Plot", 
